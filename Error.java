@@ -10,9 +10,9 @@ Project:     Deliverable 1 Scanner
 //An error object stores an error message, the value that caused the error (if applicable) and the line the error
 //occurred on
 public class Error {
-    String msg = "";
-    String value = null;
-    int line = 0;
+    private String msg = "";
+    private String value = null;
+    private int line = 0;
 
     //Error object if value is available
     Error(String msg, String value, int line){

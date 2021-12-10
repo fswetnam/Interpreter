@@ -4,6 +4,7 @@ Term:        Fall 2021
 Name:       Faith Swetnam
 Instructor:   Sharon Perry
 Project:     Deliverable 1 Scanner
+Updated: 10/28/2021
  */
 
 import java.io.File;
@@ -21,10 +22,11 @@ public class LexicalAnalyzer {
     static Token.CharacterClass currCharClass;                              //CharacterClass of nextChar
     static Token.CharacterClass prevCharClass;                              //CharacterClass for previous nextChar
     static ArrayList<Token> tokens = new ArrayList<Token>();                //stores all tokens produced
-    static int sourceLine = 1;                                              //stores the line of source the lexeme is on
+    static int sourceLine = 0;                                              //stores the line of source the lexeme is on
     static ArrayList<Error> errors = new ArrayList<Error>();                //stores errors that are found
     static boolean errorOccurred = false;                                   //stores whether an error has occurred
     static String validSymbols = "=<>~+-/*_()";                             //stores valid symbols for Julia
+    static int tokenCount = 0;
 
     //ReadFile reads File f and returns a char[] of contents of the file
     //Adds a '\n' at the end of each line and '\u001a' at the end of the file for processing reasons
@@ -75,6 +77,7 @@ public class LexicalAnalyzer {
             Error err = new Error("value is too long", sourceLine);
             errors.add(err);
             errorOccurred = true;
+            addToken(Token.TokenType.ERROR, "value is too long", sourceLine);
         }
     }
 
@@ -91,6 +94,7 @@ public class LexicalAnalyzer {
                 Error err = new Error("program ended unexpectedly", sourceLine);
                 errors.add(err);
                 errorOccurred = true;
+                addToken(Token.TokenType.ERROR, "program ended unexpectedly", sourceLine);
             }
         }
 
@@ -104,10 +108,20 @@ public class LexicalAnalyzer {
             while(nextChar != '\n') {
                 if(nextChar != '\u001a') {
                     getChar();
+                    char tempChar = nextChar;
+                    getChar();
+                    if(nextChar == '/'){
+                        comments();
+                        sourceLine++;
+                    } else {
+                        nextChar = tempChar;
+                        sourceCount--;
+                    }
                 } else {
                     Error err = new Error("program ended unexpectedly", sourceLine);
                     errors.add(err);
                     errorOccurred = true;
+                    addToken(Token.TokenType.ERROR, "program ended unexpectedly", sourceLine);
                 }
             }
         }
@@ -127,6 +141,7 @@ public class LexicalAnalyzer {
                     Error err = new Error("program ended unexpectedly", sourceLine);
                     errors.add(err);
                     errorOccurred = true;
+                    addToken(Token.TokenType.ERROR, "program ended unexpectedly", sourceLine);
                     break;
                 }
             }
@@ -138,11 +153,13 @@ public class LexicalAnalyzer {
                 Error err = new Error("program ended unexpectedly", sourceLine);
                 errors.add(err);
                 errorOccurred = true;
+                addToken(Token.TokenType.ERROR, "program ended unexpectedly", sourceLine);
             }
         } else {
             Error err = new Error("lexeme array is empty", sourceLine);
             errors.add(err);
             errorOccurred = true;
+            addToken(Token.TokenType.ERROR, "lexeme array is empty", sourceLine);
         }
 
         return lex;
@@ -157,44 +174,65 @@ public class LexicalAnalyzer {
     //LookUp determines the token type based on the lexeme
     static void lookUp(String lex) {
         Token.TokenType tokenType;
+        int line = sourceLine + 1;
         //if the lexeme is a word(contains alphabetical letters) do
         if(prevCharClass == Token.CharacterClass.LETTER) {
             switch (lex) {
                 case "end":
-                    tokenType = Token.TokenType.EOF;
-                    addToken(tokenType, lex, sourceLine);
+                    if(sourceCount == sourceArray.length-1) {
+                        tokenType = Token.TokenType.EOF;
+                    } else {
+                        tokenType = Token.TokenType.END;
+                    }
+                    addToken(tokenType, lex, line);
                     break;
                 case "function":
                     tokenType = Token.TokenType.FUNCT;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "while":
                     tokenType = Token.TokenType.WHILE;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "do":
                     tokenType = Token.TokenType.DO;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "print":
                     tokenType = Token.TokenType.PRINT;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "if":
                     tokenType = Token.TokenType.IF;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "then":
                     tokenType = Token.TokenType.THEN;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "else":
                     tokenType = Token.TokenType.ELSE;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
+                    break;
+                case "repeat":
+                    tokenType = Token.TokenType.REPEAT;
+                    addToken(tokenType, lex, line);
+                    break;
+                case "until":
+                    tokenType = Token.TokenType.UNTIL;
+                    addToken(tokenType, lex, line);
+                    break;
+                case "null":
+                    tokenType = Token.TokenType.NULL;
+                    addToken(tokenType, lex, line);
+                    break;
+                case "error":
+                    tokenType = Token.TokenType.ERROR;
+                    addToken(tokenType, lex, line);
                     break;
                 default:  //lexeme is an identifier
                     tokenType = Token.TokenType.LETTER;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
             }
             //else lexeme is a symbol or number
@@ -202,63 +240,63 @@ public class LexicalAnalyzer {
             switch(lex) {
                 case "=":
                     tokenType = Token.TokenType.ASSIGN_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "<=":
                     tokenType = Token.TokenType.LE_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "<":
                     tokenType = Token.TokenType.LT_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case ">=":
                     tokenType = Token.TokenType.GE_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case ">":
                     tokenType = Token.TokenType.GT_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "==":
                     tokenType = Token.TokenType.EQ_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "~=":
                     tokenType = Token.TokenType.NE_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "+=":
                     tokenType = Token.TokenType.AE_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "+":
                     tokenType = Token.TokenType.ADD_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "-":
                     tokenType = Token.TokenType.SUB_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "*":
                     tokenType = Token.TokenType.MUL_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "/":
                     tokenType = Token.TokenType.DIV_OP;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case "(":
                     tokenType = Token.TokenType.L_PAREN;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 case ")":
                     tokenType = Token.TokenType.R_PAREN;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
                 default:
                     tokenType = Token.TokenType.DIGIT;
-                    addToken(tokenType, lex, sourceLine);
+                    addToken(tokenType, lex, line);
                     break;
             }
         }
@@ -272,13 +310,14 @@ public class LexicalAnalyzer {
                 Error err = new Error("unexpected symbol", check, sourceLine);
                 errors.add(err);
                 errorOccurred = true;
+                addToken(Token.TokenType.ERROR, "unexpected symbol", sourceLine);
             }
         }
     }
 
     //main body of the lexical_analyzer
     //returns a token based on the lexeme found
-    static void lexer() {
+    public static Token lexer() {
         lexeme = new ArrayList<Character>();
         comments();
         processFormatting();
@@ -320,8 +359,12 @@ public class LexicalAnalyzer {
         if (prevCharClass != Token.CharacterClass.EOF && !errorOccurred) {
             String lex = string();
             lookUp(lex);
-        }
-
+            tokenCount++;
+            return tokens.get(tokenCount-1);
+        } else if(errorOccurred){
+            return new Token(Token.TokenType.ERROR, sourceLine);
+        } else
+            return new Token(Token.TokenType.EOF, "end", sourceLine);
     }
 
     //checks to ensure that the program ended correctly with 'end'
@@ -331,10 +374,12 @@ public class LexicalAnalyzer {
             Error err = new Error("no tokens initialized", sourceLine);
             errors.add(err);
             errorOccurred = true;
-        } else if(tokens.get(tokens.size()-1).type != Token.TokenType.EOF){
+            addToken(Token.TokenType.ERROR, "no tokens initialized", sourceLine);
+        } else if(tokens.get(tokens.size()-1).getType() != Token.TokenType.EOF){
             Error err = new Error("program ended unexpectedly", sourceLine);
             errors.add(err);
             errorOccurred = true;
+            addToken(Token.TokenType.ERROR, "program ended unexpectedly", sourceLine);
         }
         return errorOccurred;
     }
@@ -355,6 +400,24 @@ public class LexicalAnalyzer {
         for(Error e: errors) {
             e.printError();
         }
+    }
+
+    //ADDITION
+    //Function sets up and runs the lexical analyzer without the main and returns the ArrayList of Tokens produced
+    static ArrayList<Token> getTokenList(File f){
+        readFile(f);
+        getChar();
+        while(currCharClass != Token.CharacterClass.EOF && !errorOccurred) {
+            lexer();
+        }
+
+        endedCorrectly();
+
+        if(errorOccurred) {
+            printErrorTable(errors);
+        }
+
+        return tokens;
     }
 
 
