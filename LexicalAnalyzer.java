@@ -25,7 +25,7 @@ public class LexicalAnalyzer {
     static int sourceLine = 0;                                              //stores the line of source the lexeme is on
     static ArrayList<Error> errors = new ArrayList<Error>();                //stores errors that are found
     static boolean errorOccurred = false;                                   //stores whether an error has occurred
-    static String validSymbols = "=<>~+-/*_()";                             //stores valid symbols for Julia
+    static String validSymbols = "=<>+-/*_()!";                             //stores valid symbols for Julia
     static int tokenCount = 0;
 
     //ReadFile reads File f and returns a char[] of contents of the file
@@ -262,7 +262,7 @@ public class LexicalAnalyzer {
                     tokenType = Token.TokenType.EQ_OP;
                     addToken(tokenType, lex, line);
                     break;
-                case "~=":
+                case "!=":
                     tokenType = Token.TokenType.NE_OP;
                     addToken(tokenType, lex, line);
                     break;
@@ -349,6 +349,9 @@ public class LexicalAnalyzer {
                 while(validSymbols.contains(Character.toString(nextChar)) && nextChar != '(' && nextChar != ')' && !errorOccurred){
                     addChar();
                     getChar();
+                    if(nextChar == '(' || nextChar == ')'){
+                        break;
+                    }
                 }
                 prevCharClass = Token.CharacterClass.UNKNOWN;
                 break;
@@ -414,15 +417,16 @@ public class LexicalAnalyzer {
         endedCorrectly();
 
         if(errorOccurred) {
+            System.out.println("Lexical Analyzer Errors:");
             printErrorTable(errors);
-        }
-
-        return tokens;
+            return null;
+        } else
+            return tokens;
     }
 
 
     public static void main(String args[]) {
-        File f = new File("src/Julia-Files/Test1.jl");
+        File f = new File("src/Julia-Files/Test2.jl");
         readFile(f);
         getChar();
         while(currCharClass != Token.CharacterClass.EOF && !errorOccurred) {

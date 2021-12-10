@@ -4,6 +4,7 @@ Term:        Fall 2021
 Name:       Faith Swetnam
 Instructor:   Sharon Perry
 Project:     Deliverable 2 Parser
+Updated: 11/14/2021
  */
 
 import java.util.ArrayList;
@@ -45,5 +46,10 @@ public class Node {
     void addChild(Node child){ children.add(child); }
     //function to add a Token to the Node
     void addToken(Token token){ this.tokens.add(token); }
+    //function to return tokens
+    ArrayList<Token> getTokens(){ return tokens; }
+    Token getFirstToken(){ return tokens.get(0); }
+    Node getFirstChild(){ return children.get(0); }
+    Node getChild(int index) { return children.get(index); }
 
 }

@@ -26,6 +26,13 @@ public class Token {
         this.line = line;
     }
 
+    //Added
+    Token(){
+        this.type = TokenType.NULL;
+        this.lexeme = "NULL";
+        this.line = 0;
+    }
+
     //Prints out token values
     void printToken() {
         System.out.printf("%-10s\t%-20s\t%-10d\t%-10d\n", lexeme, type.label, type.opcode, line);
@@ -41,6 +48,14 @@ public class Token {
     TokenType getType(){
         return type;
     }
+    //Returns if the tokens TokenType is equal to the passed TokenType
+    boolean checkType(TokenType tokenType){
+        if(type == tokenType){
+            return true;
+        }
+        return false;
+    }
+
     //Enumerated type to hold the type of character in nextChar
     //Each CharacterClass has a description for printing
     enum CharacterClass {
@@ -80,7 +95,7 @@ public class Token {
         GE_OP("greater_equal", ">=", 2003),
         GT_OP("greater", ">", 2004),
         EQ_OP("equal", "==", 2005),
-        NE_OP("not_equal", "~=", 2006),
+        NE_OP("not_equal", "!=", 2006),
         AE_OP("addition_assignment", "+=", 2007),
         ADD_OP("addition_operator", "+", 2008),
         SUB_OP("subtraction_operator", "-", 2009),
